@@ -1,3 +1,4 @@
+import argparse
 import os
 import sys
 import torch
@@ -6,131 +7,124 @@ import cv2
 import numpy as np
 from PIL import Image
 from pathlib import Path
-
-
 from yolo_model import ModifiedYolov7  # Replace with actual class name
 from classifier_output_target import ClassifierOutputTarget
-
 from pytorch_grad_cam import GradCAM, GradCAMPlusPlus
 from pytorch_grad_cam.utils.image import show_cam_on_image
-from torchvision.models import resnet50
 from torchvision import transforms
 import yaml
 
+sys.path.append('')  # Add your system path if necessary
+from models.yolo import Model, IDetect  # Ensure this is the correct import path
 
-sys.path.append('')  # Add your system path
-from models.yolo import Model, IDetect  # Ensure this is the correct import path for your Model class
+# Argument parser for command-line arguments
+def parse_args():
+    parser = argparse.ArgumentParser(description="Generate Grad-CAM visualizations for YOLOv7")
+    parser.add_argument('--yaml-path', type=str, required=True, help="Path to the YAML configuration file")
+    parser.add_argument('--weights-path', type=str, required=True, help="Path to the trained model weights (.pt)")
+    parser.add_argument('--input-folder', type=str, required=True, help="Path to the input folder containing images")
+    parser.add_argument('--output-folder', type=str, required=True, help="Path to the output folder for Grad-CAM images")
+    parser.add_argument('--target-class-idx', type=int, default=0, help="Target class index for Grad-CAM visualization")
+    parser.add_argument('--resize-dim', type=int, nargs=2, default=[416, 416], help="Resize dimensions for the input image (width, height)")
+    parser.add_argument('--selected-layer', type=str, default=None, help="Name of selected layer for Grad-CAM")
 
+    
+    return parser.parse_args()
 
-# Load the model configuration from YAML
-yaml_path = '.yaml'
-try:
-    with open(yaml_path, 'r') as f:
-        model_config = yaml.safe_load(f)
-    print("Model configuration loaded successfully")
+def main():
+    args = parse_args()
 
-except FileNotFoundError:
-    print(f"Error: The file {yaml_path} was not found.")
-except yaml.YAMLError as e:
-    print(f"Error loading YAML file: {e}")
+    # Load the model configuration from YAML
+    try:
+        with open(args.yaml_path, 'r') as f:
+            model_config = yaml.safe_load(f)
+        print("Model configuration loaded successfully")
+    except FileNotFoundError:
+        print(f"Error: The file {args.yaml_path} was not found.")
+        return
+    except yaml.YAMLError as e:
+        print(f"Error loading YAML file: {e}")
+        return
 
-# Initialize the model
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model = Model(model_config).to(device)
+    # Initialize the model
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = Model(model_config).to(device)
 
+    # Load the trained weights
+    try:
+        checkpoint = torch.load(args.weights_path, map_location=device)
+        print("Weights loaded successfully")
+    except FileNotFoundError:
+        print(f"Error: The weights file {args.weights_path} was not found.")
+        return
+    except RuntimeError as e:
+        print(f"Error loading weights: {e}")
+        return
 
-# Load the trained weights from the .pt file
-weights_path = '.pt'
-
-try:
-    checkpoint = torch.load(weights_path, map_location=device)
-    print("Weights loaded successfully")
-except FileNotFoundError:
-    print(f"Error: The weights file {weights_path} was not found.")
-except RuntimeError as e:
-    print(f"Error loading weights: {e}")
-
-if 'model' in checkpoint:
-    state_dict = checkpoint['model'].state_dict()
-    print("Model is in checkpoint and state_dict loaded")
-else:
-    state_dict = checkpoint
-    print("Model is not in checkpoint, using checkpoint directly as state_dict")
-model.load_state_dict(state_dict)
-print("Model state_dict loaded successfully")
-
-model.eval()
-
-# Choose the selected layer (you already found `104.rbr_1x1.0`)
-selected_layer = None
-for name, layer in model.model.named_modules():
-    if name == "":  # Ensure this matches exactly with the selected layer's name
-        print(f"Selected layer for Grad-CAM: {name}")
-        selected_layer = layer
-        break
-
-if selected_layer is None:
-    raise ValueError("The selected layer was not found in the model.")
-
-# Initialize Grad-CAM with the selected layer
-cam = GradCAM(model=model, target_layers=[selected_layer])
-#cam = GradCAMPlusPlus(model=model, target_layers=[selected_layer])
-
-
-# Specify the input folder containing images
-input_folder = ''  # Change this to your input folder
-
-# Specify the output folder where the Grad-CAM images will be saved-
-output_folder = ''
-if not os.path.exists(output_folder):
-    os.makedirs(output_folder)
-
-
-# Load and preprocess your image
-image_paths = [os.path.join(input_folder, fname) for fname in os.listdir(input_folder) if fname.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.tiff'))]
-# Process each image in the folder
-for i, image_path in enumerate(image_paths):
-    # Load and preprocess the image
-    image = Image.open(image_path).convert('RGB')
-    preprocess = transforms.Compose([
-        transforms.Resize((416, 416)),  # Resize to match your model's expected input
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]), #Standard for Imagenet
-    ])
-    input_image = preprocess(image).unsqueeze(0).to(device)
-
-    # Perform a forward pass to get the model output
-    outputs = model(input_image)
-
-
-# Define the target class index
-    target_class_idx = 0  # Replace with the desired class index from your dataset
-    targets = [ClassifierOutputTarget(target_class_idx)]
-
-# Generate the Grad-CAM for the first target
-    grayscale_cam = cam(input_tensor=input_image, targets=targets)[0] 
-    print(grayscale_cam)
-    # Convert image for visualization (undo normalization for display)
-    rgb_img = np.array(image)
-    rgb_img = np.float32(rgb_img) / 255  # Convert to float32 for visualization
-
-    # Resize the Grad-CAM mask to match the input image size
-    grayscale_cam_resized = cv2.resize(grayscale_cam, (rgb_img.shape[1], rgb_img.shape[0]))
-
-    # Convert the grayscale CAM to 3D (RGB)
-    grayscale_cam_resized = np.stack([grayscale_cam_resized] * 3, axis=-1)
-
-    # Visualize the result
-    visualization = show_cam_on_image(rgb_img, grayscale_cam_resized, use_rgb=True, image_weight=0.7)
-
-    # Ensure the visualization is scaled between 0 and 255
-    if visualization.max() > 1.0:
-        visualization = np.uint8(visualization)
+    if 'model' in checkpoint:
+        state_dict = checkpoint['model'].state_dict()
+        print("Model is in checkpoint and state_dict loaded")
     else:
-        visualization = np.uint8(visualization * 255)
+        state_dict = checkpoint
+        print("Model is not in checkpoint, using checkpoint directly as state_dict")
+    model.load_state_dict(state_dict)
+    print("Model state_dict loaded successfully")
 
-    # Save the visualization image with a unique name
-    base_name = Path(image_path).stem  # Get the image file name without extension
-    save_path = os.path.join(output_folder, f'{base_name}_grad_cam_{i}.png')
-    Image.fromarray(visualization).save(save_path)
-    print(f"Grad-CAM visualization saved as '{save_path}'")
+    model.eval()
+
+    # Choose the selected layer    
+    for name, layer in model.model.named_modules():
+        if name == args.selected_layer:  # Ensure this matches the selected layer's name
+            print(f"Selected layer for Grad-CAM: {name}")
+            selected_layer = layer
+            break
+
+    if selected_layer is None:
+        raise ValueError("The selected layer was not found in the model.")
+
+    # Initialize Grad-CAM
+    cam = GradCAM(model=model, target_layers=[selected_layer])
+
+    # Create the output folder if it doesn't exist
+    if not os.path.exists(args.output_folder):
+        os.makedirs(args.output_folder)
+
+    # Get image paths from the input folder
+    image_paths = [os.path.join(args.input_folder, fname) for fname in os.listdir(args.input_folder)
+                   if fname.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.tiff'))]
+
+    # Process each image in the folder
+    for i, image_path in enumerate(image_paths):
+        image = Image.open(image_path).convert('RGB')
+        preprocess = transforms.Compose([
+            transforms.Resize(args.resize_dim),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        ])
+        input_image = preprocess(image).unsqueeze(0).to(device)
+
+        # Perform a forward pass
+        outputs = model(input_image)
+
+        # Define the target class index
+        targets = [ClassifierOutputTarget(args.target_class_idx)]
+
+        # Generate the Grad-CAM
+        grayscale_cam = cam(input_tensor=input_image, targets=targets)[0]
+
+        # Prepare for visualization
+        rgb_img = np.array(image) / 255.0  # Normalize to [0, 1] range
+        grayscale_cam_resized = cv2.resize(grayscale_cam, (rgb_img.shape[1], rgb_img.shape[0]))
+        visualization = show_cam_on_image(rgb_img, grayscale_cam_resized, use_rgb=True, image_weight=0.7)
+
+        # Ensure the visualization is in [0, 255] range
+        visualization = (visualization * 255).astype(np.uint8) if visualization.max() <= 1.0 else visualization
+
+        # Save the output image
+        base_name = Path(image_path).stem
+        save_path = os.path.join(args.output_folder, f'{base_name}_grad_cam_{i}.png')
+        Image.fromarray(visualization).save(save_path)
+        print(f"Grad-CAM visualization saved as '{save_path}'")
+
+if __name__ == "__main__":
+    main()
