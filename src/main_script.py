@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 from yolo_model import ModifiedYolov7  # Replace with actual class name
-from classifier_output import ClassifierOutput
+from classifier_output_target import ClassifierOutputTarget
 
 from pytorch_grad_cam import GradCAM, GradCAMPlusPlus
 from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
