@@ -1,0 +1,8 @@
+torch>=2.0.0  # Tested with 2.5.0+cu121, may work with other versions
+torchvision>=0.15.0  # Tested with 0.20.0+cu121, may work with other versions
+opencv-python
+numpy
+Pillow
+pytorch-grad-cam
+PyYAML
+matplotlib
