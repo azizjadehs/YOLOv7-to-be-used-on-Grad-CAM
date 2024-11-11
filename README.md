@@ -28,6 +28,15 @@ The original YOLOv7 is an outstanding real-time object detection model. However,
 
 Why This Repository? This repository provides a ready-to-use, modified version of YOLOv7 that supports Grad-CAM, making it easier for researchers and developers to implement explainable AI techniques in object detection tasks without running into compatibility issues.
 
+## Compatibility and Tested Environment
+
+This project was tested with the following versions:
+
+- **PyTorch**: 2.5.0+cu121
+- **Torchvision**: 0.20.0+cu121
+- **CUDA**: 12.1
+
+While these versions were tested and verified, the code may work with other compatible versions of PyTorch and Torchvision. If you encounter any compatibility issues, consider aligning with these versions.
 
 ## Acknowledgments
 - Thanks to the creators of the original [YOLOv7](https://github.com/WongKinYiu/yolov7) for providing a robust base model that this project builds upon.
