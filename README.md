@@ -43,7 +43,8 @@ While these versions were tested and verified, the code may work with other comp
 - And thanks to the creators of Grad-CAM code [pytorch-grad-cam](https://github.com/jacobgil/pytorch-grad-cam).
 
 ## Running the Script with Parameters
-To run the Grad-CAM script, use the following command:
+To run the script, use the following command:
 ```bash
 python src/main_script.py --yaml-path path/to/config.yaml --weights-path path/to/weights.pt --input-folder path/to/input/images --output-folder path/to/output/images --target-class-idx 1 --resize-dim 416 416 --selected-layer 104.rbr_dense.0
-
+```
+Or simply copy paste the main_code and run it in your IDE.
