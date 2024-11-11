@@ -7,6 +7,20 @@ This repository extends the [YOLOv7 model](https://github.com/WongKinYiu/yolov7)
 # About This Project
 The original YOLOv7 is an outstanding real-time object detection model. However, when integrating Grad-CAM for explainability, the base version of YOLOv7 generated various error messages and compatibility issues. This project was created to address those issues and make the model compatible with Grad-CAM, enabling users to visualize and understand which parts of an image contribute most to the model's detection results.
 
+## Errors when using Grad-CAM with YOLOv7:
+-Mismatch error when loading configuration of the model.
+->Solution: change the number of classes "nc" in the .yaml data into the number of trained classes.
+
+-RuntimeError: one of the variables needed for gradient computation has been modified by an inplace operation.
+->Solution: Removing all inplace operations from the IDetect class in the .py data of the model (Modifications done on YOLOv7 here already).
+
+-AttributeError: 'tuple' object has no attribute 'shape' from Grad-CAM library.
+->Solution: Extract the first tensor [0] from the Output tuple of YOLOv7 (IDetect).
+
+-RuntimeError: grad can be implicitly created only for scalar outputs.
+->Solution: making the class: _ClassifierOutputTarget_. This class can handel different types of model's outputs and extract the class score.
+
+
 ## Key Modifications:
 
 -Adjustments and additions to the original YOLOv7 code to ensure seamless integration with Grad-CAM.
