@@ -6,11 +6,6 @@ import cv2
 import numpy as np
 from PIL import Image
 from pathlib import Path
-
-
-from yolo_model import ModifiedYolov7  # Replace with actual class name
-from classifier_output_target import ClassifierOutputTarget
-
 from pytorch_grad_cam import GradCAM, GradCAMPlusPlus
 from pytorch_grad_cam.utils.image import show_cam_on_image
 from torchvision.models import resnet50
@@ -19,7 +14,8 @@ import yaml
 
 
 sys.path.append('')  # Add your system path
-from modified_yolov7.ModifiedYOLOv7 import Model, IDetect  # or if modifications directly on models.yolo.py change into from models.yolo import Model, IDetect
+from models.ModifiedYolov7 import Model, IDetect  # or if modifications directly on models.yolo.py change into from models.yolo import Model, IDetect. You only need to import from a model with the modifications does't matter from where
+from src.classifier_output_target import ClassifierOutputTarget
 
 
 # Load the model configuration from YAML
