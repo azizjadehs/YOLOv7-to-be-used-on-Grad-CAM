@@ -11,10 +11,10 @@ from pytorch_grad_cam import GradCAM, GradCAMPlusPlus
 from pytorch_grad_cam.utils.image import show_cam_on_image
 from torchvision import transforms
 import yaml
-from classifier_output_target import ClassifierOutputTarget
 
 sys.path.append('')  # Add your system path where the yolov7 file is
-from modified_yolov7.ModifiedYOLOv7 import Model, IDetect  # or if modifications directly on models.yolo.py change into from models.yolo import Model, IDetect
+from models.yolo import Model, IDetect  # or if modifications directly on models.yolo.py change into from models.yolo import Model, IDetect
+from src.classifier_output_target import ClassifierOutputTarget
 
 # Argument parser for command-line arguments
 def parse_args():
