@@ -7,15 +7,14 @@ import cv2
 import numpy as np
 from PIL import Image
 from pathlib import Path
-from modified_model import ModifiedYolov7  # Replace with actual class name
-from classifier_output_target import ClassifierOutputTarget
 from pytorch_grad_cam import GradCAM, GradCAMPlusPlus
 from pytorch_grad_cam.utils.image import show_cam_on_image
 from torchvision import transforms
 import yaml
+from classifier_output_target import ClassifierOutputTarget
 
-sys.path.append('')  # Add your system path if necessary
-from models.yolo import Model, IDetect  # Ensure this is the correct import path
+sys.path.append('')  # Add your system path where the yolov7 file is
+from modified_model.ModifiedYOLOv7 import Model, IDetect  # or if modifications directly on models.yolo.py change into from models.yolo import Model, IDetect
 
 # Argument parser for command-line arguments
 def parse_args():
