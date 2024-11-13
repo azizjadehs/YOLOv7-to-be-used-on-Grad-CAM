@@ -32,7 +32,8 @@ def parse_args():
 
 def main():
     args = parse_args()
-
+    
+    yaml_path = args.yaml_path
     # Load the model configuration from YAML
     try:
         with open(args.yaml_path, 'r') as f:
@@ -50,6 +51,7 @@ def main():
     model = Model(model_config).to(device)
 
     # Load the trained weights
+    weights_path = args.weights_path
     try:
         checkpoint = torch.load(args.weights_path, map_location=device)
         print("Weights loaded successfully")
@@ -84,8 +86,16 @@ def main():
     # Initialize Grad-CAM
     cam = GradCAM(model=model, target_layers=[selected_layer])
 
+    input_folder = args.input_folder  # Change this to your input folder
+
+    # Specify the output folder where the Grad-CAM images will be saved-
+    output_folder = args.output_folder
+        if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+
+
     # Create the output folder if it doesn't exist
-    if not os.path.exists(args.output_folder):
+        if not os.path.exists(args.output_folder):
         os.makedirs(args.output_folder)
 
     # Get image paths from the input folder
