@@ -48,3 +48,5 @@ To run the script, use the following command:
 python src/main_script.py --yaml-path path/to/config.yaml --weights-path path/to/weights.pt --input-folder path/to/input/images --output-folder path/to/output/images --target-class-idx 1 --resize-dim 416 416 --selected-layer 104.rbr_dense.0
 ```
 Or simply copy paste the main_code and run it in your IDE.
+
+## Uploaded a colab notebook [_Using_Grad_CAM_on_YOLOv7_Tutorial_](https://github.com/azizjadehs/YOLOv7-to-be-used-on-Grad-CAM/blob/main/Using_Grad_CAM_on_YOLOv7_Tutorial.ipynb) to help run the main code and the script.
