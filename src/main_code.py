@@ -19,7 +19,7 @@ import yaml
 
 
 sys.path.append('')  # Add your system path
-from models.yolo import Model, IDetect  # Ensure this is the correct import path for your Model class
+from modified_yolov7.ModifiedYOLOv7 import Model, IDetect  # or if modifications directly on models.yolo.py change into from models.yolo import Model, IDetect
 
 
 # Load the model configuration from YAML
