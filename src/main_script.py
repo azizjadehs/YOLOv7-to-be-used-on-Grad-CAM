@@ -12,7 +12,8 @@ from pytorch_grad_cam.utils.image import show_cam_on_image
 from torchvision import transforms
 import yaml
 
-#sys.path.append('')  # Add your system path where the yolov7 file is
+# Add the project root directory to the Python path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../')
 from models.yolo import Model, IDetect  # or if modifications directly on models.yolo.py change into from models.yolo import Model, IDetect
 from src.classifier_output_target import ClassifierOutputTarget
 
@@ -90,12 +91,12 @@ def main():
 
     # Specify the output folder where the Grad-CAM images will be saved-
     output_folder = args.output_folder
-        if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
+    if not os.path.exists(output_folder):
+       os.makedirs(output_folder)
 
 
     # Create the output folder if it doesn't exist
-        if not os.path.exists(args.output_folder):
+    if not os.path.exists(args.output_folder):
         os.makedirs(args.output_folder)
 
     # Get image paths from the input folder
